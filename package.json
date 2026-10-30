@@ -31,6 +31,7 @@
     "dev": "remotion studio",
     "build": "remotion bundle",
     "render": "remotion render",
+    "render:pumagrib": "remotion render PUMagrib out/pumagrib.mp4",
     "render:mv": "remotion render PetakUmpetMaghrib out/petak-umpet-maghrib.mp4",
     "render:movie": "remotion render PetakUmpetMagribMV out/petak-umpet-magrib-mv.mp4",
     "render:captions": "remotion render ViralCaptions out/viral-captions.mp4",

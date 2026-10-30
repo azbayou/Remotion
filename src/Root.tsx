@@ -9,7 +9,7 @@ import { DEFAULT_QUIZ_DATA } from "./viral/QuizShort/mockQuiz";
 import { FakeChatShort } from "./viral/FakeChatShort/FakeChatShort";
 import { DEFAULT_CHAT_STORY } from "./viral/FakeChatShort/mockChat";
 import { PetakUmpetMaghrib } from "./viral/PetakUmpetMaghrib/PetakUmpetMaghrib";
-import { PetakUmpetMagribMV } from "./viral/PetakUmpetMagribMV";
+import { PUMagrib } from "./viral/PUMagrib";
 
 // Each <Composition> is an entry in the Remotion Studio sidebar!
 
@@ -88,7 +88,7 @@ export const RemotionRoot: React.FC = () => {
         {/* 🎬 5. Petak Umpet Magrib Movie Video (Scene by Scene Animated MV) */}
         <Composition
           id="PetakUmpetMagribMV"
-          component={PetakUmpetMagribMV}
+          component={PUMagrib}
           durationInFrames={5307} // 176.88 detik @ 30 fps (2 menit 56.88 detik)
           fps={30}
           width={1080}
@@ -99,6 +99,25 @@ export const RemotionRoot: React.FC = () => {
             showCinematicBars: true,
             showFilmGrain: true,
             showHUD: true,
+            showSubtitles: true,
+            showSafeZone: false,
+          }}
+        />
+
+        {/* 🎬 6. PUMagrib Official MV */}
+        <Composition
+          id="PUMagrib"
+          component={PUMagrib}
+          durationInFrames={4256} // 176.88 detik @ 30 fps (2 menit 56.88 detik)
+          fps={24}
+          width={1080}
+          height={1920}
+          defaultProps={{
+            audioFileName: "petak-umpet-maghrib.mp3",
+            audioVolume: 1,
+            showCinematicBars: true,
+            showFilmGrain: true,
+            showHUD: false,
             showSubtitles: true,
             showSafeZone: false,
           }}

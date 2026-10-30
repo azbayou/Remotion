@@ -1,8 +1,16 @@
-import React, { memo, useEffect, useRef, useState } from "react";
+import React from "react";
+import {
+  AbsoluteFill,
+  Audio,
+  staticFile,
+  useCurrentFrame,
+  useVideoConfig,
+} from "remotion";
 import { LYRIC_TIMELINE, TOTAL_DURATION, formatTime } from "./timeline";
 import type { LyricSegment } from "./timeline";
 import { CharacterStyles, Kid, KidCloseUp } from "./character";
 import type { Expression, KidVariant, Pose } from "./character";
+import { SafeZoneOverlay } from "../../components/SafeZoneOverlay";
 
 /* ====================================================================
  *  PUMagrib.tsx — "Petak Umpet di Waktu Maghrib" (MV animasi 9:16)
@@ -49,6 +57,10 @@ const Defs = () => (
       <stop offset="0" stopColor="#fffbe0" stopOpacity=".9" />
       <stop offset="1" stopColor="#fffbe0" stopOpacity="0" />
     </linearGradient>
+    <filter id="film-grain">
+      <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" result="noise" />
+      <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.08 0" />
+    </filter>
   </defs>
 );
 
@@ -674,7 +686,7 @@ type ShotPlan = [Shot, Expression?, KidVariant?];
 const SHOTS: Record<string, ShotPlan> = {
   "intro-1": ["scenery"],
   "v1-1": ["wide"],
-  "v1-2": ["close", "happy"],
+  "v1-2": ["medium", "happy"],
   "v1-3": ["wide"],
   "v1-4": ["medium"],
 
@@ -684,11 +696,11 @@ const SHOTS: Record<string, ShotPlan> = {
   "c1-4": ["medium", "scared"],
 
   "v2-1": ["wide"],
-  "v2-2": ["close", "worried"],
+  "v2-2": ["medium", "worried"],
   "v2-3": ["scenery"],
   "v2-4": ["close", "crying"],
   "v2-5": ["medium"],
-  "v2-6": ["close", "worried"],
+  "v2-6": ["medium", "worried"],
   "v2-7": ["detail"],
   "v2-8": ["wide"],
 
@@ -701,13 +713,13 @@ const SHOTS: Record<string, ShotPlan> = {
   "bridge-2": ["wide"],
 
   "v3-1": ["medium", "scared"],
-  "v3-2": ["close", "relief"],
+  "v3-2": ["medium", "relief"],
   "v3-3": ["medium", "relief"],
   "v3-4": ["close", "happy", "friend"],
   "v3-5": ["medium"],
   "v3-6": ["wide"],
   "v3-7": ["scenery"],
-  "v3-8": ["close", "relief"],
+  "v3-8": ["medium", "relief"],
 
   "c3-1": ["wide"],
   "c3-2": ["medium"],
@@ -761,8 +773,8 @@ function cameraFor(shot: Shot, d: SceneDef, p: number, t: number, shake: boolean
   return `translate(${W / 2 + jx} ${H / 2 + jy}) scale(${z}) translate(${-cx} ${-cy})`;
 }
 
-/** Dunia scene. Di-memo agar tidak digambar ulang setiap frame kamera. */
-const World = memo(function World({ scene, chars, expr }: { scene: Scene; chars: boolean; expr?: Expression }) {
+/** Dunia scene. */
+const World: React.FC<{ scene: Scene; chars: boolean; expr?: Expression }> = ({ scene, chars, expr }) => {
   const d = SCENES[scene];
   return (
     <g>
@@ -771,30 +783,27 @@ const World = memo(function World({ scene, chars, expr }: { scene: Scene; chars:
       {chars && d.friend && <Actor a={d.friend} v="friend" />}
     </g>
   );
-});
+};
 
 const CSS = `
-.mv-root{min-height:100vh;background:#0b0a12;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:12px;color:#fff;font-family:"Baloo 2","Poppins","Trebuchet MS",system-ui,sans-serif}
-.mv-stage{--h:min(86vh,calc((100vw - 24px) * 16 / 9));position:relative;height:var(--h);width:calc(var(--h) * 9 / 16);container-type:inline-size;overflow:hidden;border-radius:18px;background:#000;box-shadow:0 20px 60px rgba(0,0,0,.6)}
-.mv-svg{position:absolute;inset:0;width:100%;height:100%;transition:filter .25s}
-.mv-close{position:absolute;inset:0 0 14% 0;display:flex;align-items:center;justify-content:center;pointer-events:none}
-.mv-close>div{width:88%;animation:mv-push .5s ease-out both}
-.mv-vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.55) 100%)}
-.mv-cut{position:absolute;inset:0;background:#fff;pointer-events:none;animation:mv-cut .3s ease-out both}
-.mv-bar{position:absolute;left:0;right:0;height:4.5%;background:#000}
-.mv-shade{position:absolute;left:0;right:0;bottom:0;height:44%;pointer-events:none;background:linear-gradient(to top,rgba(0,0,0,.78),transparent)}
-.mv-hud{position:absolute;left:0;right:0;top:4.5%;padding:2.4cqw 4cqw;display:flex;justify-content:space-between;font-size:3.2cqw;font-weight:600;opacity:.85;text-shadow:0 1px 4px #000}
-.mv-progress{position:absolute;left:0;right:0;top:calc(4.5% - 3px);height:3px;background:rgba(255,255,255,.2)}
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Poppins:wght@500;600;700&display=swap');
+.mv-root{position:absolute;inset:0;width:100%;height:100%;background:#000;overflow:hidden;color:#fff;font-family:"Baloo 2","Poppins","Trebuchet MS",system-ui,sans-serif}
+.mv-stage{position:absolute;inset:0;width:100%;height:100%;container-type:inline-size;overflow:hidden;background:#000}
+.mv-svg{position:absolute;inset:0;width:100%;height:100%;z-index:1}
+.mv-close{position:absolute;inset:0 0 14% 0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:2}
+.mv-close>div{width:88%;animation:mv-push .35s ease-out}
+.mv-vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.55) 100%);z-index:3}
+.mv-shade{position:absolute;left:0;right:0;bottom:0;height:44%;pointer-events:none;background:linear-gradient(to top,rgba(0,0,0,.78),transparent);z-index:4}
+.mv-cut{position:absolute;inset:0;background:#fff;pointer-events:none;animation:mv-cut .3s ease-out both;z-index:5}
+.mv-bar{position:absolute;left:0;right:0;height:4.5%;background:#000;z-index:6}
+.mv-progress{position:absolute;left:0;right:0;top:calc(4.5% - 3px);height:3px;background:rgba(255,255,255,.2);z-index:7}
 .mv-progress>i{display:block;height:100%;background:#ffd84d}
-.mv-lyrics{position:absolute;left:0;right:0;bottom:7.5%;padding:0 6cqw;text-align:center;display:flex;flex-direction:column;align-items:center;gap:1.6cqw}
+.mv-hud{position:absolute;left:0;right:0;top:4.5%;padding:2.4cqw 4cqw;display:flex;justify-content:space-between;font-size:3.2cqw;font-weight:600;opacity:.85;text-shadow:0 1px 4px #000;z-index:7}
+.mv-lyrics{position:absolute;left:0;right:0;bottom:7.5%;padding:0 6cqw;text-align:center;display:flex;flex-direction:column;align-items:center;gap:1.6cqw;z-index:7}
 .mv-chip{font-size:2.8cqw;font-weight:700;letter-spacing:.08em;padding:.5cqw 2.6cqw;border-radius:99px;background:rgba(255,255,255,.16);backdrop-filter:blur(4px)}
 .mv-text{font-size:6.4cqw;font-weight:800;line-height:1.15;text-shadow:0 2px 0 rgba(0,0,0,.6),0 0 14px rgba(0,0,0,.7);animation:mv-text .35s ease-out both}
 .mv-hook{font-size:8.4cqw;color:#ffe14d;-webkit-text-stroke:.6cqw #b3122a;paint-order:stroke fill;animation:mv-pop .5s ease-out both}
 .mv-sub{font-size:3.6cqw;font-weight:500;line-height:1.3;opacity:.92;text-shadow:0 1px 6px #000;animation:mv-text .5s ease-out .1s both}
-.mv-play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.35);border:0;color:#fff;cursor:pointer;font-size:18cqw}
-.mv-ctrl{display:flex;align-items:center;gap:10px;width:min(100%,520px);font-size:14px}
-.mv-ctrl button{background:#1d1b2b;color:#fff;border:1px solid #3a3752;border-radius:10px;padding:6px 12px;cursor:pointer;font-size:15px}
-.mv-ctrl input{flex:1;accent-color:#ffd84d}
 @keyframes fx-flicker{0%,100%{opacity:1}8%{opacity:.35}12%{opacity:.9}30%{opacity:.5}34%{opacity:1}70%{opacity:.7}}
 @keyframes fx-drift{from{transform:translateX(-30px)}to{transform:translateX(30px)}}
 @keyframes fx-sweep{from{transform:rotate(-14deg)}to{transform:rotate(14deg)}}
@@ -817,76 +826,45 @@ const CSS = `
  * ==================================================================== */
 
 export interface PUMagribProps {
+  /** File lagu di folder public/, default: "petak-umpet-maghrib.mp3" */
+  audioFileName?: string;
   /** File lagu (opsional). Jika ada, audio menjadi jam utama video. */
   audioSrc?: string;
+  /** Volume audio (0 s/d 1), default: 1 */
+  audioVolume?: number;
+  /** Tampilkan border bar sinematik di atas & bawah */
+  showCinematicBars?: boolean;
+  /** Tampilkan efek tekstur film grain */
+  showFilmGrain?: boolean;
+  /** Tampilkan HUD (judul lagu & durasi real-time) */
+  showHUD?: boolean;
+  /** Tampilkan teks lirik / subtitle karaoke */
+  showSubtitles?: boolean;
+  /** Tampilkan overlay safe zone platform shorts/reels */
+  showSafeZone?: boolean;
   autoPlay?: boolean;
 }
 
-export function PUMagrib({ audioSrc, autoPlay = false }: PUMagribProps) {
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const timeRef = useRef(0);
-  const [time, setTime] = useState(0);
-  const [playing, setPlaying] = useState(autoPlay);
-
-  /* jam pemutar */
-  useEffect(() => {
-    if (!playing) return;
-    const audio = audioRef.current;
-    let raf = 0;
-    let last = performance.now();
-    if (audio && audioSrc) {
-      audio.currentTime = timeRef.current;
-      audio.play().catch(() => setPlaying(false));
-    }
-    const tick = (now: number) => {
-      let t: number;
-      if (audio && audioSrc) {
-        t = audio.currentTime;
-      } else {
-        t = timeRef.current + (now - last) / 1000;
-        last = now;
-      }
-      if (t >= TOTAL_DURATION) {
-        timeRef.current = TOTAL_DURATION;
-        setTime(TOTAL_DURATION);
-        setPlaying(false);
-        return;
-      }
-      timeRef.current = t;
-      setTime(t);
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => {
-      cancelAnimationFrame(raf);
-      audio?.pause();
-    };
-  }, [playing, audioSrc]);
-
-  const seek = (t: number) => {
-    timeRef.current = t;
-    setTime(t);
-    if (audioRef.current && audioSrc) audioRef.current.currentTime = t;
-  };
-  const toggle = () => {
-    if (!playing && timeRef.current >= TOTAL_DURATION - 0.05) seek(0);
-    setPlaying((p) => !p);
-  };
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.code === "Space" && (e.target as HTMLElement).tagName !== "INPUT") {
-        e.preventDefault();
-        toggle();
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  });
+export const PUMagrib: React.FC<PUMagribProps> = ({
+  audioFileName = "petak-umpet-maghrib.mp3",
+  audioSrc,
+  audioVolume = 1,
+  showCinematicBars = true,
+  showFilmGrain = false,
+  showHUD = true,
+  showSubtitles = true,
+  showSafeZone = false,
+}) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const time = frame / fps;
 
   /* segmen & shot aktif */
   const seg =
-    LYRIC_TIMELINE.find((s) => time >= s.startTime && time < s.endTime) ?? LYRIC_TIMELINE[LYRIC_TIMELINE.length - 1];
+    LYRIC_TIMELINE.find((s) => time >= s.startTime && time < s.endTime) ??
+    (time >= TOTAL_DURATION
+      ? LYRIC_TIMELINE[LYRIC_TIMELINE.length - 1]
+      : LYRIC_TIMELINE[0]);
   const plan: ShotPlan = SHOTS[seg.id] ?? ["wide"];
   const shot = plan[0];
   const who: KidVariant = plan[2] ?? "oca";
@@ -897,11 +875,17 @@ export function PUMagrib({ audioSrc, autoPlay = false }: PUMagribProps) {
   const showChars = shot === "wide" || shot === "medium" || shot === "detail";
   const closeExpr: Expression = plan[1] ?? (who === "friend" ? "happy" : d.oca.expr);
 
+  const resolvedAudioSrc = audioSrc
+    ? audioSrc.startsWith("http") || audioSrc.startsWith("/")
+      ? audioSrc
+      : staticFile(audioSrc)
+    : staticFile(audioFileName || "petak-umpet-maghrib.mp3");
+
   return (
-    <div className="mv-root">
+    <AbsoluteFill className="mv-root">
       <style>{CSS}</style>
       <CharacterStyles />
-      {audioSrc && <audio ref={audioRef} src={audioSrc} preload="auto" />}
+      {resolvedAudioSrc && <Audio src={resolvedAudioSrc} volume={audioVolume} />}
 
       <div className="mv-stage">
         <svg
@@ -917,7 +901,7 @@ export function PUMagrib({ audioSrc, autoPlay = false }: PUMagribProps) {
         </svg>
 
         {shot === "close" && (
-          <div className="mv-close" key={seg.id} style={{ filter: d.light }}>
+          <div className="mv-close" key={`close-${seg.id}`} style={{ filter: d.light }}>
             <div>
               <KidCloseUp variant={who} expr={closeExpr} />
             </div>
@@ -927,52 +911,56 @@ export function PUMagrib({ audioSrc, autoPlay = false }: PUMagribProps) {
         <div className="mv-vignette" />
         <div className="mv-shade" />
         <div className="mv-cut" key={`cut-${seg.id}`} />
-        <div className="mv-bar" style={{ top: 0 }} />
-        <div className="mv-bar" style={{ bottom: 0 }} />
-        <div className="mv-progress">
-          <i style={{ width: `${(time / TOTAL_DURATION) * 100}%` }} />
-        </div>
-        <div className="mv-hud">
-          <span>🎵 Petak Umpet di Waktu Maghrib</span>
-          <span>
-            {formatTime(time)} / {formatTime(TOTAL_DURATION)}
-          </span>
-        </div>
 
-        <div className="mv-lyrics" key={seg.id}>
-          <span className="mv-chip">{seg.section}</span>
-          <div className={`mv-text${seg.isHook ? " mv-hook" : ""}`}>{rename(seg.text)}</div>
-          {seg.subtext && <div className="mv-sub">{rename(seg.subtext)}</div>}
-        </div>
-
-        {!playing && (
-          <button className="mv-play" onClick={toggle} aria-label="Putar">
-            ▶
-          </button>
+        {showCinematicBars && (
+          <>
+            <div className="mv-bar" style={{ top: 0 }} />
+            <div className="mv-bar" style={{ bottom: 0 }} />
+          </>
         )}
-      </div>
 
-      <div className="mv-ctrl">
-        <button onClick={toggle}>{playing ? "⏸ Jeda" : "▶ Putar"}</button>
-        <button
-          onClick={() => {
-            seek(0);
-            setPlaying(true);
-          }}
-        >
-          ⟲
-        </button>
-        <input
-          type="range"
-          min={0}
-          max={TOTAL_DURATION}
-          step={0.1}
-          value={time}
-          onChange={(e) => seek(parseFloat(e.target.value))}
-        />
+        {showHUD && (
+          <>
+            <div className="mv-progress">
+              <i style={{ width: `${Math.min(100, (time / TOTAL_DURATION) * 100)}%` }} />
+            </div>
+            <div className="mv-hud">
+              <span>🎵 Petak Umpet di Waktu Maghrib</span>
+              <span>
+                {formatTime(time)} / {formatTime(TOTAL_DURATION)}
+              </span>
+            </div>
+          </>
+        )}
+
+        {showSubtitles && (
+          <div className="mv-lyrics" key={`lyrics-${seg.id}`}>
+            <span className="mv-chip">{seg.section}</span>
+            <div className={`mv-text${seg.isHook ? " mv-hook" : ""}`}>{rename(seg.text)}</div>
+            {seg.subtext && <div className="mv-sub">{rename(seg.subtext)}</div>}
+          </div>
+        )}
+
+        {showFilmGrain && (
+          <svg
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              pointerEvents: "none",
+              zIndex: 5,
+            }}
+          >
+            <rect width="100%" height="100%" filter="url(#film-grain)" />
+          </svg>
+        )}
+
+        {showSafeZone && <SafeZoneOverlay visible={showSafeZone} />}
       </div>
-    </div>
+    </AbsoluteFill>
   );
-}
+};
 
+export { PUMagrib as PetakUmpetMagribMV };
 export default PUMagrib;
