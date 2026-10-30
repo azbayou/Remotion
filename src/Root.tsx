@@ -2,13 +2,82 @@ import { Composition, Folder } from "remotion";
 import { HelloWorld } from "./HelloWorld";
 import { Logo } from "./HelloWorld/Logo";
 import { Title } from "./HelloWorld/Title";
+import { CaptionsShort } from "./viral/CaptionsShort/CaptionsShort";
+import { DEFAULT_VIRAL_CAPTIONS } from "./viral/CaptionsShort/mockCaptions";
+import { QuizShort } from "./viral/QuizShort/QuizShort";
+import { DEFAULT_QUIZ_DATA } from "./viral/QuizShort/mockQuiz";
+import { FakeChatShort } from "./viral/FakeChatShort/FakeChatShort";
+import { DEFAULT_CHAT_STORY } from "./viral/FakeChatShort/mockChat";
 
-// Each <Composition> is an entry in the sidebar!
+// Each <Composition> is an entry in the Remotion Studio sidebar!
 
 export const RemotionRoot: React.FC = () => {
   return (
     <>
-      <Folder name="Elements">
+      {/* 🚀 VIRAL SHORTS (9:16 VERTICAL - 1080x1920) */}
+      <Folder name="ViralShorts">
+        {/* 1. Kinetic Subtitles / Alex Hormozi Style */}
+        <Composition
+          id="ViralCaptions"
+          component={CaptionsShort}
+          durationInFrames={300} // 10 seconds at 30 fps
+          fps={30}
+          width={1080}
+          height={1920}
+          defaultProps={{
+            hookTitle: "Trik Bikin Video Viral 🚀",
+            hookCategory: "REMOTION SECRETS",
+            authorHandle: "@developer_id",
+            captions: DEFAULT_VIRAL_CAPTIONS,
+            highlightColor: "#FFE600",
+            activeWordStyle: "pill" as const,
+            showSafeZone: false,
+          }}
+        />
+
+        {/* 2. Interactive Countdown Quiz / Trivia */}
+        <Composition
+          id="ViralQuiz"
+          component={QuizShort}
+          durationInFrames={240} // 8 seconds at 30 fps
+          fps={30}
+          width={1080}
+          height={1920}
+          defaultProps={{
+            quiz: DEFAULT_QUIZ_DATA,
+            showSafeZone: false,
+          }}
+        />
+
+        {/* 3. iMessage / WhatsApp Viral Chat Story */}
+        <Composition
+          id="ViralFakeChat"
+          component={FakeChatShort}
+          durationInFrames={320} // ~10.6 seconds at 30 fps
+          fps={30}
+          width={1080}
+          height={1920}
+          defaultProps={{
+            story: DEFAULT_CHAT_STORY,
+            showSafeZone: false,
+          }}
+        />
+      </Folder>
+
+      {/* 💻 ORIGINAL TEMPLATES (16:9 LANDSCAPE - 1920x1080) */}
+      <Folder name="OriginalTemplates">
+        <Composition
+          id="HelloWorld"
+          component={HelloWorld}
+          durationInFrames={150}
+          fps={30}
+          width={1920}
+          height={1080}
+          defaultProps={{
+            titleText: "Welcome to Remotion",
+            titleColor: "#000000",
+          }}
+        />
         <Composition
           id="Logo"
           component={Logo}
@@ -34,23 +103,6 @@ export const RemotionRoot: React.FC = () => {
           }}
         />
       </Folder>
-      <Composition
-        // You can take the "id" to render a video:
-        // bunx remotion render HelloWorld
-        id="HelloWorld"
-        component={HelloWorld}
-        durationInFrames={150}
-        fps={30}
-        width={1920}
-        height={1080}
-        // You can override these props for each render:
-        // https://www.remotion.dev/docs/parametrized-rendering
-        defaultProps={{
-          titleText: "Welcome to Remotion",
-          titleColor: "#000000",
-        }}
-      />
-
     </>
   );
 };

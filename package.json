@@ -1,7 +1,7 @@
 {
   "name": "latihan-remotion",
   "version": "1.0.0",
-  "description": "My Remotion video",
+  "description": "Viral Short-Form Remotion Videos",
   "repository": {},
   "license": "UNLICENSED",
   "engines": {
@@ -9,7 +9,10 @@
   },
   "private": true,
   "dependencies": {
+    "@remotion/captions": "4.0.539",
     "@remotion/cli": "4.0.539",
+    "@remotion/media-utils": "4.0.539",
+    "@remotion/paths": "4.0.539",
     "@remotion/zod-types": "4.0.539",
     "react": "19.2.3",
     "react-dom": "19.2.3",
@@ -27,6 +30,11 @@
   "scripts": {
     "dev": "remotion studio",
     "build": "remotion bundle",
+    "render": "remotion render",
+    "render:captions": "remotion render ViralCaptions out/viral-captions.mp4",
+    "render:quiz": "remotion render ViralQuiz out/viral-quiz.mp4",
+    "render:chat": "remotion render ViralFakeChat out/viral-chat.mp4",
+    "still": "remotion still ViralCaptions out/thumbnail.jpeg",
     "upgrade": "remotion upgrade",
     "lint": "eslint src && tsc"
   },
