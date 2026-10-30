@@ -8,6 +8,7 @@ import { QuizShort } from "./viral/QuizShort/QuizShort";
 import { DEFAULT_QUIZ_DATA } from "./viral/QuizShort/mockQuiz";
 import { FakeChatShort } from "./viral/FakeChatShort/FakeChatShort";
 import { DEFAULT_CHAT_STORY } from "./viral/FakeChatShort/mockChat";
+import { PetakUmpetMaghrib } from "./viral/PetakUmpetMaghrib/PetakUmpetMaghrib";
 
 // Each <Composition> is an entry in the Remotion Studio sidebar!
 
@@ -32,6 +33,8 @@ export const RemotionRoot: React.FC = () => {
             highlightColor: "#FFE600",
             activeWordStyle: "pill" as const,
             showSafeZone: false,
+            musicSrc: "", // isi misal: "bgm.mp3" kalau sudah taruh file di folder public/
+            musicVolume: 0.3,
           }}
         />
 
@@ -46,6 +49,8 @@ export const RemotionRoot: React.FC = () => {
           defaultProps={{
             quiz: DEFAULT_QUIZ_DATA,
             showSafeZone: false,
+            musicSrc: "",
+            musicVolume: 0.3,
           }}
         />
 
@@ -59,6 +64,22 @@ export const RemotionRoot: React.FC = () => {
           height={1920}
           defaultProps={{
             story: DEFAULT_CHAT_STORY,
+            showSafeZone: false,
+            musicSrc: "",
+            musicVolume: 0.3,
+          }}
+        />
+        {/* 🎬 4. Petak Umpet di Waktu Maghrib (Kisah Nyata Yosa - Official MV 2:56) */}
+        <Composition
+          id="PetakUmpetMaghrib"
+          component={PetakUmpetMaghrib}
+          durationInFrames={5307} // 176.88 detik @ 30 fps (2 menit 56 detik)
+          fps={30}
+          width={1080}
+          height={1920}
+          defaultProps={{
+            audioFileName: "petak-umpet-maghrib.mp3",
+            audioVolume: 1,
             showSafeZone: false,
           }}
         />

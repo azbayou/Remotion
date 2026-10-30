@@ -17,11 +17,22 @@ Project Remotion ini sudah dikonfigurasi khusus untuk membuat format video pende
 
 ---
 
-## 🎬 3 Template Video Viral Siap Pakai
+## 🎬 4 Template Video Viral Siap Pakai
 
 Semua template bisa kamu lihat dan edit langsung di Remotion Studio sidebar:
 
-### 1. `ViralCaptions` (Alex Hormozi / CapCut Kinetic Captions)
+### 1. `PetakUmpetMaghrib` (Kisah Yosa 7 Tahun - Official 9:16 MV) ⭐ BARU!
+- **Path Komponen**: [`src/viral/PetakUmpetMaghrib/PetakUmpetMaghrib.tsx`](file:///home/kiyory/Documents/Remotion/latihan-remotion/latihan-remotion/src/viral/PetakUmpetMaghrib/PetakUmpetMaghrib.tsx)
+- **Path Audio**: [`public/petak-umpet-maghrib.mp3`](file:///home/kiyory/Documents/Remotion/latihan-remotion/latihan-remotion/public/petak-umpet-maghrib.mp3) (Durasi: **02:56 / 5307 frame**)
+- **Data Timeline & Lirik**: [`src/viral/PetakUmpetMaghrib/timeline.ts`](file:///home/kiyory/Documents/Remotion/latihan-remotion/latihan-remotion/src/viral/PetakUmpetMaghrib/timeline.ts)
+- **Karakter & Animasi**: [`src/viral/PetakUmpetMaghrib/Characters.tsx`](file:///home/kiyory/Documents/Remotion/latihan-remotion/latihan-remotion/src/viral/PetakUmpetMaghrib/Characters.tsx) (Yosa & Sahabat Penyelamat)
+- **Fitur Lengkap**:
+  - Full 2D SVG Movie bergaya kartun komik dengan transisi warna langit dari senja surau -> merah panik homeless -> malam gang gelap -> lampu jalan hangat saat diselamatkan sahabat.
+  - Animasi karakter Yosa (lari, nangis peluk lutut, panik teriak O besar, senang tertawa) dan Sahabat berpeci dengan senter pahlawan.
+  - Subtitle karaoke dinamis (fill progress bar per baris lirik).
+  - Sinkronisasi sempurna dengan lagu `petak-umpet-maghrib.mp3`.
+
+### 2. `ViralCaptions` (Alex Hormozi / CapCut Kinetic Captions)
 - **Path**: [`src/viral/CaptionsShort/CaptionsShort.tsx`](file:///home/kiyory/Documents/Remotion/latihan-remotion/latihan-remotion/src/viral/CaptionsShort/CaptionsShort.tsx)
 - **Ciri khas**: Subtitle kata-per-kata yang memantul (spring physics), highlight kata aktif dengan warna neon/pill box kuning cerah, audio waveform bar, dan hook banner di bagian atas.
 - **Data script**: Edit teks di [`src/viral/CaptionsShort/mockCaptions.ts`](file:///home/kiyory/Documents/Remotion/latihan-remotion/latihan-remotion/src/viral/CaptionsShort/mockCaptions.ts).
@@ -50,6 +61,9 @@ Buka browser di `http://localhost:3000`. Kamu bisa menggeser timeline, mencoba s
 Untuk merender video berkualitas tinggi:
 
 ```bash
+# Render video musik Petak Umpet Maghrib (Kisah Yosa - 2:56)
+npm run render:mv
+
 # Render video kinetic captions
 npm run render:captions
 

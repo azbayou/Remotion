@@ -62,3 +62,4 @@ export const DEFAULT_VIRAL_CAPTIONS: CaptionPhrase[] = [
     ],
   },
 ];
+

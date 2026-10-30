@@ -1,8 +1,10 @@
 import React from "react";
 import {
   AbsoluteFill,
+  Audio,
   interpolate,
   spring,
+  staticFile,
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
@@ -13,14 +15,18 @@ import { ChatStory, DEFAULT_CHAT_STORY } from "./mockChat";
 export interface FakeChatShortProps {
   story?: ChatStory;
   showSafeZone?: boolean;
+  musicSrc?: string;
+  musicVolume?: number;
 }
 
 export const FakeChatShort: React.FC<FakeChatShortProps> = ({
   story = DEFAULT_CHAT_STORY,
   showSafeZone = false,
+  musicSrc,
+  musicVolume = 0.3,
 }) => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const { fps, durationInFrames } = useVideoConfig();
 
   // Find if typing indicator should show right before a message
   const nextThemMessage = story.messages.find(
@@ -36,6 +42,24 @@ export const FakeChatShort: React.FC<FakeChatShortProps> = ({
       }}
     >
       <ProgressBar gradient="linear-gradient(90deg, #25D366, #128C7E)" />
+
+      {musicSrc && (
+        <Audio
+          src={staticFile(musicSrc)}
+          volume={(f) =>
+            interpolate(
+              f,
+              [0, 15, durationInFrames - 15, durationInFrames],
+              [0, musicVolume, musicVolume, 0],
+              {
+                extrapolateLeft: "clamp",
+                extrapolateRight: "clamp",
+              }
+            )
+          }
+          loop
+        />
+      )}
 
       {/* WhatsApp / iOS Style Top Navigation Bar */}
       <div
@@ -238,3 +262,4 @@ export const FakeChatShort: React.FC<FakeChatShortProps> = ({
     </AbsoluteFill>
   );
 };
+

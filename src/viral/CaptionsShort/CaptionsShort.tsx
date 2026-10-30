@@ -1,8 +1,10 @@
 import React from "react";
 import {
   AbsoluteFill,
+  Audio,
   interpolate,
   spring,
+  staticFile,
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
@@ -21,6 +23,8 @@ export interface CaptionsShortProps {
   highlightColor?: string;
   activeWordStyle?: "pill" | "neon";
   showSafeZone?: boolean;
+  musicSrc?: string; // Nama file audio di folder public/, misal "music.mp3"
+  musicVolume?: number; // Volume 0 sampai 1 (default: 0.3)
 }
 
 export const CaptionsShort: React.FC<CaptionsShortProps> = ({
@@ -31,9 +35,11 @@ export const CaptionsShort: React.FC<CaptionsShortProps> = ({
   highlightColor = "#FFE600",
   activeWordStyle = "pill",
   showSafeZone = false,
+  musicSrc,
+  musicVolume = 0.3,
 }) => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const { fps, durationInFrames } = useVideoConfig();
 
   // Find the currently active phrase based on frame
   const currentPhrase = captions.find(
@@ -66,6 +72,25 @@ export const CaptionsShort: React.FC<CaptionsShortProps> = ({
         secondaryColor="#020617"
         accentColor="#6366f1"
       />
+
+      {/* 🎵 Background Music (Otomatis fade in & fade out) */}
+      {musicSrc && (
+        <Audio
+          src={staticFile(musicSrc)}
+          volume={(f) =>
+            interpolate(
+              f,
+              [0, 15, durationInFrames - 15, durationInFrames],
+              [0, musicVolume, musicVolume, 0],
+              {
+                extrapolateLeft: "clamp",
+                extrapolateRight: "clamp",
+              }
+            )
+          }
+          loop
+        />
+      )}
 
       {/* 2. Top Progress Bar */}
       <ProgressBar gradient="linear-gradient(90deg, #F43F5E, #8B5CF6, #FFE600)" />

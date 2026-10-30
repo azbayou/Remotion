@@ -1,8 +1,10 @@
 import React from "react";
 import {
   AbsoluteFill,
+  Audio,
   interpolate,
   spring,
+  staticFile,
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
@@ -14,14 +16,18 @@ import { DEFAULT_QUIZ_DATA, QuizData } from "./mockQuiz";
 export interface QuizShortProps {
   quiz?: QuizData;
   showSafeZone?: boolean;
+  musicSrc?: string;
+  musicVolume?: number;
 }
 
 export const QuizShort: React.FC<QuizShortProps> = ({
   quiz = DEFAULT_QUIZ_DATA,
   showSafeZone = false,
+  musicSrc,
+  musicVolume = 0.3,
 }) => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const { fps, durationInFrames } = useVideoConfig();
 
   const isRevealed = frame >= quiz.revealFrame;
 
@@ -64,6 +70,24 @@ export const QuizShort: React.FC<QuizShortProps> = ({
         secondaryColor="#020617"
         accentColor="#7c3aed"
       />
+
+      {musicSrc && (
+        <Audio
+          src={staticFile(musicSrc)}
+          volume={(f) =>
+            interpolate(
+              f,
+              [0, 15, durationInFrames - 15, durationInFrames],
+              [0, musicVolume, musicVolume, 0],
+              {
+                extrapolateLeft: "clamp",
+                extrapolateRight: "clamp",
+              }
+            )
+          }
+          loop
+        />
+      )}
 
       <ProgressBar gradient="linear-gradient(90deg, #3B82F6, #10B981)" />
 

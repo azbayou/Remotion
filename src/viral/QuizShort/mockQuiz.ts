@@ -27,3 +27,4 @@ export const DEFAULT_QUIZ_DATA: QuizData = {
   ],
   correctExplanation: "Ferris the Crab adalah maskot resmi bahasa Rust! 🦀",
 };
+
