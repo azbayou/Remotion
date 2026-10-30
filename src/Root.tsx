@@ -100,6 +100,8 @@ export const RemotionRoot: React.FC = () => {
             showFilmGrain: true,
             showHUD: true,
             showSubtitles: true,
+            showSection: false,
+            showSubtext: false,
             showSafeZone: false,
           }}
         />
@@ -119,6 +121,8 @@ export const RemotionRoot: React.FC = () => {
             showFilmGrain: true,
             showHUD: false,
             showSubtitles: true,
+            showSection: false,
+            showSubtext: false,
             showSafeZone: false,
           }}
         />

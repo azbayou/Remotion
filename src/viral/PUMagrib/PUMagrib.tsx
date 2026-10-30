@@ -466,10 +466,12 @@ const BgHero = () => (
   </g>
 );
 
-/* 8. walking_home — jalan terang, lampu & rumah bergeser, gerbang rumah */
+/* 8. walking_home — jalan terang, lampu & pohon bergeser */
 const WalkTile = () => (
   <g>
-    <Skyline y={440} color="#1c1b3f" seed={8} n={7} lit={0.7} tall={60} />
+    <Tree x={160} y={440} s={0.7} color="#161530" />
+    <circle cx={40} cy={440} r={14} fill="#141328" />
+    <circle cx={320} cy={440} r={16} fill="#141328" />
     <Lamp x={70} y={462} h={150} glow={110} />
     <Lamp x={250} y={462} h={150} glow={110} />
     <path d="M0 640 H360" stroke="#ffd98a" strokeOpacity=".22" strokeWidth={4} strokeDasharray="60 60" />
@@ -487,13 +489,6 @@ const BgWalk = () => (
       <g transform="translate(360 0)">
         <WalkTile />
       </g>
-    </g>
-    <House x={305} y={462} w={110} h={72} wall="#3d3350" roof="#7a3a4a" />
-    <g stroke="#14101f" strokeWidth={3}>
-      {Array.from({ length: 9 }, (_, i) => 262 + i * 10).map((x) => (
-        <line key={x} x1={x} y1={432} x2={x} y2={464} />
-      ))}
-      <line x1={258} y1={440} x2={350} y2={440} />
     </g>
   </g>
 );
@@ -840,6 +835,10 @@ export interface PUMagribProps {
   showHUD?: boolean;
   /** Tampilkan teks lirik / subtitle karaoke */
   showSubtitles?: boolean;
+  /** Tampilkan chip bagian lagu (INTRO, VERSE 1, dll), default: false */
+  showSection?: boolean;
+  /** Tampilkan teks narasi tambahan / subtext, default: false */
+  showSubtext?: boolean;
   /** Tampilkan overlay safe zone platform shorts/reels */
   showSafeZone?: boolean;
   autoPlay?: boolean;
@@ -853,6 +852,8 @@ export const PUMagrib: React.FC<PUMagribProps> = ({
   showFilmGrain = false,
   showHUD = true,
   showSubtitles = true,
+  showSection = false,
+  showSubtext = false,
   showSafeZone = false,
 }) => {
   const frame = useCurrentFrame();
@@ -935,9 +936,9 @@ export const PUMagrib: React.FC<PUMagribProps> = ({
 
         {showSubtitles && (
           <div className="mv-lyrics" key={`lyrics-${seg.id}`}>
-            <span className="mv-chip">{seg.section}</span>
+            {showSection && <span className="mv-chip">{seg.section}</span>}
             <div className={`mv-text${seg.isHook ? " mv-hook" : ""}`}>{rename(seg.text)}</div>
-            {seg.subtext && <div className="mv-sub">{rename(seg.subtext)}</div>}
+            {showSubtext && seg.subtext && <div className="mv-sub">{rename(seg.subtext)}</div>}
           </div>
         )}
 

@@ -3,8 +3,8 @@ import { useCurrentFrame, useVideoConfig } from "remotion";
 
 /* ------------------------------------------------------------------ *
  *  character.tsx
- *  Oca  : 7 tahun, kurus, rambut pendek lurus (poni rata), kacamata bulat
- *  Friend: sahabat yang mencari Oca (peci, tubuh lebih berisi)
+ *  Oca  : 7 tahun, kurus, rambut pendek lurus (poni rata), kacamata bulat, baju koko putih & celana hitam
+ *  Friend: sahabat yang mencari Oca (peci, baju koko toska, tubuh lebih berisi, celana hitam)
  *
  *  Semua digambar dengan SVG murni, tanpa library. Koordinat kerja
  *  tiap karakter: kotak 200 x 340, kaki berpijak di y ≈ 332.
@@ -76,8 +76,8 @@ interface Palette {
 }
 
 const PALETTE: Record<KidVariant, Palette> = {
-  oca: { skin: "#f4d0a8", shirt: "#f7f7f2", shorts: "#d02f33", hair: "#1d1822", ink: "#2a2430" },
-  friend: { skin: "#d49a62", shirt: "#4fa6a0", shorts: "#2f3a6b", hair: "#17141c", ink: "#2a2430" },
+  oca: { skin: "#f4d0a8", shirt: "#f8fafc", shorts: "#1e1e24", hair: "#1d1822", ink: "#2a2430" },
+  friend: { skin: "#d49a62", shirt: "#4fa6a0", shorts: "#1e1e24", hair: "#17141c", ink: "#2a2430" },
 };
 
 /* --------------------------- Pose & Kecepatan ---------------------- */
@@ -405,16 +405,18 @@ const Crouch: React.FC<{ v: KidVariant; expr: Expression; p: Palette; t: number 
   const th = f ? 11 : 8.5;
   return (
     <g>
-      {/* badan atas */}
+      {/* badan atas (baju koko) */}
       <path d={`M${100 - hw - 2} 196 L${100 + hw + 2} 196 L${100 + hw} 270 H${100 - hw} Z`} fill={p.shirt} />
-      {/* paha (celana longgar) */}
+      <line x1={100} y1={200} x2={100} y2={256} stroke="#cbd5e1" strokeWidth={1.4} />
+      <circle cx={100} cy={218} r={1.5} fill="#94a3b8" />
+      <circle cx={100} cy={238} r={1.5} fill="#94a3b8" />
+      {/* paha (celana panjang hitam) */}
       <ellipse cx={100} cy={276} rx={f ? 42 : 36} ry={f ? 17 : 15} fill={p.shorts} />
-      {/* betis + kaus kaki + sepatu */}
+      {/* betis celana panjang hitam + sepatu */}
       {[78, 122].map((x) => (
         <g key={x}>
-          <path d={`M${x} 270 V316`} stroke={p.skin} strokeWidth={th} strokeLinecap="round" />
-          <path d={`M${x} 292 V312`} stroke="#fff" strokeWidth={th + 1.5} strokeLinecap="round" />
-          <ellipse cx={x + (x < 100 ? -2 : 2)} cy={324} rx={f ? 14 : 12} ry={7} fill="#2a2a38" />
+          <path d={`M${x} 270 V316`} stroke={p.shorts} strokeWidth={th + 2} strokeLinecap="round" />
+          <ellipse cx={x + (x < 100 ? -2 : 2)} cy={324} rx={f ? 14 : 12} ry={7} fill="#18181e" />
         </g>
       ))}
       {/* tangan memeluk lutut */}
@@ -504,9 +506,8 @@ export const Kid: React.FC<KidProps> = ({
   const leg = (hx: number, a: number, dd: number, rev: boolean) => (
     <Limb px={hx} py={214} a={a} d={dd} dur={dur} rev={rev} t={t}>
       <path d={`M${hx} 214 V318`} stroke={p.skin} strokeWidth={lt} strokeLinecap="round" />
-      <path d={`M${hx} 214 V252`} stroke={p.shorts} strokeWidth={lt + 6} strokeLinecap="round" />
-      <path d={`M${hx} 292 V314`} stroke="#fff" strokeWidth={lt + 1.5} strokeLinecap="round" />
-      <ellipse cx={hx + 2} cy={324} rx={f ? 14 : 12} ry={7} fill="#2a2a38" />
+      <path d={`M${hx} 214 V312`} stroke={p.shorts} strokeWidth={lt + 5} strokeLinecap="round" />
+      <ellipse cx={hx + 2} cy={324} rx={f ? 14 : 12} ry={7} fill="#18181e" />
     </Limb>
   );
 
@@ -522,9 +523,11 @@ export const Kid: React.FC<KidProps> = ({
         {leg(hxL, d.lL, d.dL ?? 0, true)}
         {leg(hxR, d.lR, d.dL ?? 0, false)}
 
-        {/* badan */}
-        <path d={`M${100 - hw - 2} 116 L${100 + hw + 2} 116 L${100 + hip + 4} 212 L${100 - hip - 4} 212 Z`} fill={p.shirt} />
-        <path d={`M${100 - hw} 198 H${100 + hw} L${100 + hip + 7} 226 H${100 - hip - 7} Z`} fill={p.shorts} />
+        {/* pinggul celana panjang hitam */}
+        <path d={`M${100 - hw} 198 H${100 + hw} L${100 + hip + 7} 228 H${100 - hip - 7} Z`} fill={p.shorts} />
+
+        {/* badan baju koko (jatuh rapi di luar celana) */}
+        <path d={`M${100 - hw - 2} 116 L${100 + hw + 2} 116 L${100 + hip + 5} 214 L${100 - hip - 5} 214 Z`} fill={p.shirt} />
         {f ? (
           <g stroke="#2f827c" strokeWidth={1.5}>
             <path d="M100 124 V198" />
@@ -533,10 +536,24 @@ export const Kid: React.FC<KidProps> = ({
             <circle cx={100} cy={186} r={1.6} fill="#2f827c" />
           </g>
         ) : (
-          <g fill="none" strokeLinecap="round">
-            <path d="M91 116 L100 132 L109 116" stroke="#d6d6d0" strokeWidth={2} />
-            <path d={`M${100 - hw + 4} 118 L${100 - hw + 7} 178`} stroke="#274b9b" strokeWidth={4} />
-            <path d={`M${100 + hw - 4} 118 L${100 + hw - 7} 178`} stroke="#274b9b" strokeWidth={4} />
+          <g>
+            {/* Kerah shanghai / koko Oca */}
+            <path d="M92 116 Q100 121 108 116" stroke="#cbd5e1" strokeWidth={2} fill="none" strokeLinecap="round" />
+            {/* Placket garis kancing tengah */}
+            <line x1={100} y1={118} x2={100} y2={196} stroke="#cbd5e1" strokeWidth={1.5} />
+            {/* Aksen bordir halus khas koko */}
+            <path d="M97 122 V188" stroke="#e2e8f0" strokeWidth={1.2} strokeDasharray="2 3" />
+            <path d="M103 122 V188" stroke="#e2e8f0" strokeWidth={1.2} strokeDasharray="2 3" />
+            {/* Kancing koko rapi */}
+            <circle cx={100} cy={136} r={1.5} fill="#94a3b8" />
+            <circle cx={100} cy={154} r={1.5} fill="#94a3b8" />
+            <circle cx={100} cy={172} r={1.5} fill="#94a3b8" />
+            <circle cx={100} cy={190} r={1.5} fill="#94a3b8" />
+            {/* Tali ransel robot */}
+            <g fill="none" strokeLinecap="round">
+              <path d={`M${100 - hw + 4} 118 L${100 - hw + 7} 178`} stroke="#274b9b" strokeWidth={3.5} />
+              <path d={`M${100 + hw - 4} 118 L${100 + hw - 7} 178`} stroke="#274b9b" strokeWidth={3.5} />
+            </g>
           </g>
         )}
 
@@ -592,9 +609,25 @@ export const KidCloseUp: React.FC<{
         <g style={animStyle}>
           <path d="M36 176 Q40 134 80 124 L120 124 Q160 134 164 176 Z" fill={p.shirt} />
           {variant === "oca" ? (
-            <path d="M88 124 L100 140 L112 124" fill="none" stroke="#d6d6d0" strokeWidth={2.4} strokeLinecap="round" />
+            <g>
+              {/* Kerah shanghai / koko Oca */}
+              <path d="M90 123 Q100 129 110 123" fill="none" stroke="#cbd5e1" strokeWidth={2.5} strokeLinecap="round" />
+              {/* Placket kancing depan */}
+              <path d="M100 126 V176" stroke="#cbd5e1" strokeWidth={1.8} />
+              {/* Bordir vertikal aksen koko */}
+              <path d="M96 130 V172" stroke="#e2e8f0" strokeWidth={1.2} strokeDasharray="2 3" />
+              <path d="M104 130 V172" stroke="#e2e8f0" strokeWidth={1.2} strokeDasharray="2 3" />
+              {/* Kancing koko */}
+              <circle cx={100} cy={138} r={1.8} fill="#94a3b8" />
+              <circle cx={100} cy={154} r={1.8} fill="#94a3b8" />
+              <circle cx={100} cy={170} r={1.8} fill="#94a3b8" />
+            </g>
           ) : (
-            <path d="M100 130 V176" stroke="#2f827c" strokeWidth={2} />
+            <g stroke="#2f827c" strokeWidth={2}>
+              <path d="M100 130 V176" />
+              <circle cx={100} cy={144} r={1.8} fill="#2f827c" />
+              <circle cx={100} cy={160} r={1.8} fill="#2f827c" />
+            </g>
           )}
           <Head v={variant} expr={expr} p={p} t={t} />
         </g>
