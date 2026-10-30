@@ -1,4 +1,5 @@
 import React from "react";
+import { useCurrentFrame, useVideoConfig } from "remotion";
 
 /* ------------------------------------------------------------------ *
  *  character.tsx
@@ -7,6 +8,7 @@ import React from "react";
  *
  *  Semua digambar dengan SVG murni, tanpa library. Koordinat kerja
  *  tiap karakter: kotak 200 x 340, kaki berpijak di y ≈ 332.
+ *  Animasi dikendalikan secara deterministik via Remotion (frame-accurate).
  * ------------------------------------------------------------------ */
 
 export type Expression = "happy" | "worried" | "scared" | "crying" | "relief";
@@ -24,7 +26,28 @@ export type Pose =
   | "wave";
 export type KidVariant = "oca" | "friend";
 
-/* ------------------------- CSS animasi ----------------------------- */
+/* ------------------ Remotion Frame Helper ------------------------- */
+
+function useSafeRemotion(overrideFrame?: number, overrideFps?: number) {
+  let frame = overrideFrame;
+  let fps = overrideFps;
+
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const remotionFrame = useCurrentFrame();
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const remotionConfig = useVideoConfig();
+    if (frame === undefined) frame = remotionFrame;
+    if (fps === undefined) fps = remotionConfig.fps;
+  } catch {
+    if (frame === undefined) frame = 0;
+    if (fps === undefined) fps = 30;
+  }
+
+  return { frame: frame ?? 0, fps: fps || 30 };
+}
+
+/* ------------------------- CSS animasi (Legacy / Fallback) -------- */
 
 export const CHARACTER_CSS = `
 @keyframes kid-limb{from{transform:rotate(calc((var(--a) - var(--d)) * 1deg))}to{transform:rotate(calc((var(--a) + var(--d)) * 1deg))}}
@@ -57,7 +80,7 @@ const PALETTE: Record<KidVariant, Palette> = {
   friend: { skin: "#d49a62", shirt: "#4fa6a0", shorts: "#2f3a6b", hair: "#17141c", ink: "#2a2430" },
 };
 
-/* --------------------------- Pose ---------------------------------- */
+/* --------------------------- Pose & Kecepatan ---------------------- */
 
 type BodyAnim = "bob" | "jump" | "shake" | "sob" | "sway";
 
@@ -69,36 +92,66 @@ interface PoseDef {
   dAL?: number; // amplitudo ayunan
   dAR?: number;
   dL?: number;
-  dur?: number;
+  dur?: number; // durasi siklus dalam detik (dikalibrasi agar natural)
   body?: BodyAnim;
   head?: boolean;
 }
 
 const POSES: Record<Exclude<Pose, "crouch">, PoseDef> = {
   stand: { aL: 7, aR: -7, lL: 2, lR: -2, body: "sway" },
-  walk: { aL: 0, aR: 0, lL: 0, lR: 0, dAL: 22, dAR: 22, dL: 24, dur: 0.7, body: "bob" },
-  run: { aL: 0, aR: 0, lL: 0, lR: 0, dAL: 55, dAR: 55, dL: 48, dur: 0.3, body: "bob" },
-  panic: { aL: 155, aR: -155, lL: 6, lR: -6, dAL: 12, dAR: 12, dur: 0.16, body: "shake" },
+  walk: { aL: 0, aR: 0, lL: 0, lR: 0, dAL: 22, dAR: 22, dL: 24, dur: 0.8, body: "bob" },
+  run: { aL: 0, aR: 0, lL: 0, lR: 0, dAL: 55, dAR: 55, dL: 48, dur: 0.5, body: "bob" },
+  panic: { aL: 155, aR: -155, lL: 6, lR: -6, dAL: 12, dAR: 12, dur: 0.28, body: "shake" },
   look: { aL: 14, aR: -14, lL: 2, lR: -2, body: "sway", head: true },
-  holdR: { aL: 0, aR: -34, lL: 0, lR: 0, dAL: 18, dL: 22, dur: 0.7, body: "bob" },
-  holdL: { aL: 32, aR: 0, lL: 0, lR: 0, dAR: 18, dL: 22, dur: 0.7, body: "bob" },
+  holdR: { aL: 0, aR: -34, lL: 0, lR: 0, dAL: 18, dL: 22, dur: 0.8, body: "bob" },
+  holdL: { aL: 32, aR: 0, lL: 0, lR: 0, dAR: 18, dL: 22, dur: 0.8, body: "bob" },
   reach: { aL: 78, aR: -8, lL: 3, lR: -3, body: "sway" },
-  cheer: { aL: 140, aR: -140, lL: 8, lR: -8, dAL: 14, dAR: 14, dL: 10, dur: 0.32, body: "jump" },
-  wave: { aL: 7, aR: -140, lL: 2, lR: -2, dAR: 20, dur: 0.35, body: "sway" },
+  cheer: { aL: 140, aR: -140, lL: 8, lR: -8, dAL: 14, dAR: 14, dL: 10, dur: 0.55, body: "jump" },
+  wave: { aL: 7, aR: -140, lL: 2, lR: -2, dAR: 20, dur: 0.6, body: "sway" },
 };
 
-const bodyStyle = (b: BodyAnim | undefined, dur = 1): React.CSSProperties => {
+/* Transformasi Tubuh Berdasarkan Waktu Video (t = frame / fps) */
+const getBodyTransform = (
+  b: BodyAnim | undefined,
+  t: number,
+  dur = 1
+): React.CSSProperties => {
   switch (b) {
-    case "bob":
-      return { animation: `kid-bob ${dur}s ease-in-out infinite` };
-    case "jump":
-      return { animation: `kid-jump ${dur * 2}s ease-in-out infinite` };
-    case "shake":
-      return { animation: "kid-shake .12s linear infinite" };
-    case "sob":
-      return { animation: "kid-sob .55s ease-in-out infinite" };
-    case "sway":
-      return { animation: "kid-sway 3s ease-in-out infinite", transformOrigin: "100px 332px" };
+    case "bob": {
+      const phase = (2 * Math.PI * t) / dur;
+      const y = -((1 - Math.cos(phase)) / 2) * 6;
+      return { transform: `translateY(${y.toFixed(2)}px)` };
+    }
+    case "jump": {
+      const jumpDur = dur * 2;
+      const phase = (2 * Math.PI * t) / jumpDur;
+      const y = -((1 - Math.cos(phase)) / 2) * 24;
+      return { transform: `translateY(${y.toFixed(2)}px)` };
+    }
+    case "shake": {
+      const shakeDur = 0.22;
+      const phase = (2 * Math.PI * t) / shakeDur;
+      const tx = Math.sin(phase) * 2;
+      const ty = -Math.abs(Math.cos(phase)) * 1;
+      const rot = Math.sin(phase) * 1.2;
+      return {
+        transform: `translate(${tx.toFixed(2)}px, ${ty.toFixed(2)}px) rotate(${rot.toFixed(2)}deg)`,
+      };
+    }
+    case "sob": {
+      const sobDur = 0.65;
+      const phase = (2 * Math.PI * t) / sobDur;
+      const y = ((1 - Math.cos(phase)) / 2) * 3;
+      return { transform: `translateY(${y.toFixed(2)}px)` };
+    }
+    case "sway": {
+      const swayDur = 3.2;
+      const rot = Math.sin((2 * Math.PI * t) / swayDur) * 1.2;
+      return {
+        transform: `rotate(${rot.toFixed(2)}deg)`,
+        transformOrigin: "100px 332px",
+      };
+    }
     default:
       return {};
   }
@@ -112,23 +165,26 @@ const Limb: React.FC<{
   d: number;
   dur: number;
   rev: boolean;
+  t: number;
   children: React.ReactNode;
-}> = ({ px, py, a, d, dur, rev, children }) => {
-  const style: any = { transformOrigin: `${px}px ${py}px` };
-  if (d) {
-    style["--a"] = a;
-    style["--d"] = d;
-    style.animation = `kid-limb ${dur}s ease-in-out infinite ${rev ? "alternate-reverse" : "alternate"}`;
-  } else {
-    style.transform = `rotate(${a}deg)`;
+}> = ({ px, py, a, d, dur, rev, t, children }) => {
+  let angle = a;
+  if (d && dur > 0) {
+    const sinVal = Math.sin((t * Math.PI) / dur);
+    angle = a + d * sinVal * (rev ? -1 : 1);
   }
-  return <g style={style}>{children}</g>;
+  return <g transform={`rotate(${angle.toFixed(2)} ${px} ${py})`}>{children}</g>;
 };
 
 /* --------------------------- Kepala -------------------------------- */
 
-const Eyes: React.FC<{ expr: Expression; ink: string }> = ({ expr, ink }) => {
+const Eyes: React.FC<{ expr: Expression; ink: string; t: number }> = ({ expr, ink, t }) => {
   const cs = [80, 120];
+  const gaze =
+    expr === "scared"
+      ? Math.sin((2 * Math.PI * t) / 1.8) * 2.5
+      : Math.sin((2 * Math.PI * t) / 2.6) * 2.5;
+
   switch (expr) {
     case "happy":
       return (
@@ -155,7 +211,7 @@ const Eyes: React.FC<{ expr: Expression; ink: string }> = ({ expr, ink }) => {
       );
     case "scared":
       return (
-        <g style={{ animation: "kid-gaze 1.6s ease-in-out infinite" }}>
+        <g transform={`translate(${gaze.toFixed(2)} 0)`}>
           {cs.map((c) => (
             <g key={c}>
               <circle cx={c} cy={80} r={9.5} fill="#fff" stroke={ink} strokeWidth={1.5} />
@@ -166,7 +222,7 @@ const Eyes: React.FC<{ expr: Expression; ink: string }> = ({ expr, ink }) => {
       );
     default:
       return (
-        <g style={{ animation: "kid-gaze 2.2s ease-in-out infinite" }}>
+        <g transform={`translate(${gaze.toFixed(2)} 0)`}>
           {cs.map((c) => (
             <g key={c}>
               <circle cx={c} cy={81} r={5.2} fill={ink} />
@@ -213,16 +269,42 @@ const Mouth: React.FC<{ expr: Expression }> = ({ expr }) => {
   }
 };
 
-const Head: React.FC<{ v: KidVariant; expr: Expression; p: Palette; lookAround?: boolean }> = ({
-  v,
-  expr,
-  p,
-  lookAround,
-}) => {
+const getLookAroundRotation = (t: number) => {
+  const p = (t % 3.6) / 3.6;
+  if (p < 0.15) return 0;
+  if (p < 0.25) {
+    const k = (p - 0.15) / 0.1;
+    return -13 * ((1 - Math.cos(k * Math.PI)) / 2);
+  }
+  if (p < 0.45) return -13;
+  if (p < 0.55) {
+    const k = (p - 0.45) / 0.1;
+    const s = (1 - Math.cos(k * Math.PI)) / 2;
+    return -13 + 25 * s;
+  }
+  if (p < 0.75) return 12;
+  if (p < 0.9) {
+    const k = (p - 0.75) / 0.15;
+    const s = (1 - Math.cos(k * Math.PI)) / 2;
+    return 12 * (1 - s);
+  }
+  return 0;
+};
+
+const Head: React.FC<{
+  v: KidVariant;
+  expr: Expression;
+  p: Palette;
+  lookAround?: boolean;
+  t: number;
+}> = ({ v, expr, p, lookAround, t }) => {
   const blush = expr === "happy" || expr === "crying" || expr === "relief";
   const [bl, br] = BROWS[expr];
+  const rot = lookAround ? getLookAroundRotation(t) : 0;
+  const headTransform = rot !== 0 ? `rotate(${rot.toFixed(2)} 100 112)` : undefined;
+
   return (
-    <g style={lookAround ? { animation: "kid-look 3.2s ease-in-out infinite", transformOrigin: "100px 112px" } : undefined}>
+    <g transform={headTransform}>
       {/* leher + telinga + wajah */}
       <rect x={94} y={108} width={12} height={18} fill={p.skin} />
       <circle cx={57} cy={78} r={8} fill={p.skin} />
@@ -254,7 +336,7 @@ const Head: React.FC<{ v: KidVariant; expr: Expression; p: Palette; lookAround?:
         </g>
       )}
 
-      <Eyes expr={expr} ink={p.ink} />
+      <Eyes expr={expr} ink={p.ink} t={t} />
 
       {/* kacamata bulat (khusus Oca) */}
       {v === "oca" && (
@@ -282,29 +364,42 @@ const Head: React.FC<{ v: KidVariant; expr: Expression; p: Palette; lookAround?:
       {/* air mata & keringat dingin */}
       {expr === "crying" &&
         [78, 122].map((c, i) =>
-          [0, 0.55].map((dl) => (
-            <path
-              key={`${c}-${dl}`}
-              d={`M${c + (i ? 3 : -3)} 92 q-4 8 0 13 q4 -5 0 -13z`}
-              fill="#8fd3ff"
-              style={{ animation: `kid-tear 1.1s ease-in ${dl}s infinite` }}
-            />
-          ))
+          [0, 0.55].map((dl) => {
+            const pVal = ((t + dl) % 1.2) / 1.2;
+            const ty = pVal * 22;
+            const op = pVal <= 0.15 ? (pVal / 0.15) * 0.95 : (1 - (pVal - 0.15) / 0.85) * 0.95;
+            return (
+              <path
+                key={`${c}-${dl}`}
+                d={`M${c + (i ? 3 : -3)} 92 q-4 8 0 13 q4 -5 0 -13z`}
+                fill="#8fd3ff"
+                transform={`translate(0 ${ty.toFixed(1)})`}
+                opacity={Math.max(0, Math.min(1, op))}
+              />
+            );
+          })
         )}
-      {(expr === "scared" || expr === "worried") && (
-        <path
-          d="M142 38 q-6 10 0 14 q6 -4 0 -14z"
-          fill="#8fd3ff"
-          style={{ animation: "kid-sweat 1.2s ease-in-out infinite" }}
-        />
-      )}
+      {(expr === "scared" || expr === "worried") &&
+        (() => {
+          const phase = (2 * Math.PI * t) / 1.5;
+          const ty = ((1 - Math.cos(phase)) / 2) * 7;
+          const op = 0.5 + ((1 + Math.cos(phase)) / 2) * 0.4;
+          return (
+            <path
+              d="M142 38 q-6 10 0 14 q6 -4 0 -14z"
+              fill="#8fd3ff"
+              transform={`translate(0 ${ty.toFixed(1)})`}
+              opacity={Math.max(0, Math.min(1, op))}
+            />
+          );
+        })()}
     </g>
   );
 };
 
 /* --------------------- Pose jongkok (peluk lutut) ------------------- */
 
-const Crouch: React.FC<{ v: KidVariant; expr: Expression; p: Palette }> = ({ v, expr, p }) => {
+const Crouch: React.FC<{ v: KidVariant; expr: Expression; p: Palette; t: number }> = ({ v, expr, p, t }) => {
   const f = v === "friend";
   const hw = f ? 21 : 15;
   const th = f ? 11 : 8.5;
@@ -341,7 +436,7 @@ const Crouch: React.FC<{ v: KidVariant; expr: Expression; p: Palette }> = ({ v, 
         </g>
       )}
       <g transform="translate(0 84)">
-        <Head v={v} expr={expr} p={p} />
+        <Head v={v} expr={expr} p={p} t={t} />
       </g>
     </g>
   );
@@ -355,21 +450,33 @@ export interface KidProps {
   expr?: Expression;
   /** siluet hitam, dipakai untuk karakter di kejauhan */
   silhouette?: boolean;
+  frame?: number;
+  fps?: number;
 }
 
 /** Dipasang di dalam <svg> apa pun. Kaki berpijak di (100, 332). */
-export const Kid: React.FC<KidProps> = ({ variant = "oca", pose = "stand", expr = "happy", silhouette }) => {
+export const Kid: React.FC<KidProps> = ({
+  variant = "oca",
+  pose = "stand",
+  expr = "happy",
+  silhouette,
+  frame: fProp,
+  fps: fpsProp,
+}) => {
+  const { frame, fps } = useSafeRemotion(fProp, fpsProp);
+  const t = frame / fps;
   const p = PALETTE[variant];
   const f = variant === "friend";
   const wrap: React.CSSProperties | undefined = silhouette ? { filter: "brightness(0) opacity(.82)" } : undefined;
   const shadow = <ellipse cx={100} cy={334} rx={f ? 46 : 40} ry={7} fill="#000" opacity=".28" />;
 
   if (pose === "crouch") {
+    const sobY = ((1 - Math.cos((2 * Math.PI * t) / 0.65)) / 2) * 3;
     return (
       <g style={wrap}>
         {shadow}
-        <g style={bodyStyle("sob")}>
-          <Crouch v={variant} expr={expr} p={p} />
+        <g transform={`translate(0 ${sobY.toFixed(2)})`}>
+          <Crouch v={variant} expr={expr} p={p} t={t} />
         </g>
       </g>
     );
@@ -387,7 +494,7 @@ export const Kid: React.FC<KidProps> = ({ variant = "oca", pose = "stand", expr 
   const hxR = 100 + hip;
 
   const arm = (sx: number, a: number, dd: number, rev: boolean) => (
-    <Limb px={sx} py={128} a={a} d={dd} dur={dur} rev={rev}>
+    <Limb px={sx} py={128} a={a} d={dd} dur={dur} rev={rev} t={t}>
       <path d={`M${sx} 128 V204`} stroke={p.skin} strokeWidth={th} strokeLinecap="round" />
       <path d={`M${sx} 128 V158`} stroke={p.shirt} strokeWidth={th + 5} strokeLinecap="round" />
       <circle cx={sx} cy={206} r={th / 2 + 1.5} fill={p.skin} />
@@ -395,7 +502,7 @@ export const Kid: React.FC<KidProps> = ({ variant = "oca", pose = "stand", expr 
   );
 
   const leg = (hx: number, a: number, dd: number, rev: boolean) => (
-    <Limb px={hx} py={214} a={a} d={dd} dur={dur} rev={rev}>
+    <Limb px={hx} py={214} a={a} d={dd} dur={dur} rev={rev} t={t}>
       <path d={`M${hx} 214 V318`} stroke={p.skin} strokeWidth={lt} strokeLinecap="round" />
       <path d={`M${hx} 214 V252`} stroke={p.shorts} strokeWidth={lt + 6} strokeLinecap="round" />
       <path d={`M${hx} 292 V314`} stroke="#fff" strokeWidth={lt + 1.5} strokeLinecap="round" />
@@ -403,10 +510,12 @@ export const Kid: React.FC<KidProps> = ({ variant = "oca", pose = "stand", expr 
     </Limb>
   );
 
+  const bodyTransform = getBodyTransform(d.body, t, dur);
+
   return (
     <g style={wrap}>
       {shadow}
-      <g style={bodyStyle(d.body, dur)}>
+      <g style={bodyTransform}>
         {/* tas sekolah (hanya sisi kiri-kanan yang terlihat) */}
         {!f && <rect x={100 - hw - 12} y={118} width={2 * hw + 24} height={72} rx={9} fill="#3b6fd1" />}
 
@@ -434,7 +543,7 @@ export const Kid: React.FC<KidProps> = ({ variant = "oca", pose = "stand", expr 
         {arm(sxL, d.aL, d.dAL ?? 0, false)}
         {arm(sxR, d.aR, d.dAR ?? 0, true)}
 
-        <Head v={variant} expr={expr} p={p} lookAround={d.head} />
+        <Head v={variant} expr={expr} p={p} lookAround={d.head} t={t} />
       </g>
     </g>
   );
@@ -448,25 +557,46 @@ export const KidCloseUp: React.FC<{
   expr?: Expression;
   className?: string;
   style?: React.CSSProperties;
-}> = ({ variant = "oca", expr = "worried", className, style }) => {
+  frame?: number;
+  fps?: number;
+}> = ({ variant = "oca", expr = "worried", className, style, frame: fProp, fps: fpsProp }) => {
+  const { frame, fps } = useSafeRemotion(fProp, fpsProp);
+  const t = frame / fps;
   const p = PALETTE[variant];
-  const anim =
-    expr === "crying"
-      ? "kid-sob .55s ease-in-out infinite"
-      : expr === "scared"
-      ? "kid-shake .14s linear infinite"
-      : "kid-breathe 3s ease-in-out infinite";
+
+  let animStyle: React.CSSProperties = {};
+  if (expr === "crying") {
+    const y = ((1 - Math.cos((2 * Math.PI * t) / 0.65)) / 2) * 3;
+    animStyle = { transform: `translateY(${y.toFixed(2)}px)` };
+  } else if (expr === "scared") {
+    const phase = (2 * Math.PI * t) / 0.22;
+    const tx = Math.sin(phase) * 2;
+    const ty = -Math.abs(Math.cos(phase)) * 1;
+    const rot = Math.sin(phase) * 1.2;
+    animStyle = {
+      transform: `translate(${tx.toFixed(2)}px, ${ty.toFixed(2)}px) rotate(${rot.toFixed(2)}deg)`,
+      transformOrigin: "100px 150px",
+    };
+  } else {
+    // breathe
+    const scale = 1 + ((1 - Math.cos((2 * Math.PI * t) / 3.2)) / 2) * 0.015;
+    animStyle = {
+      transform: `scale(${scale.toFixed(4)})`,
+      transformOrigin: "100px 150px",
+    };
+  }
+
   return (
     <svg viewBox="0 6 140 164" className={className} style={{ display: "block", width: "100%", height: "auto", ...style }}>
       <g transform="translate(-30 0)">
-        <g style={{ animation: anim, transformOrigin: "100px 150px" }}>
+        <g style={animStyle}>
           <path d="M36 176 Q40 134 80 124 L120 124 Q160 134 164 176 Z" fill={p.shirt} />
           {variant === "oca" ? (
             <path d="M88 124 L100 140 L112 124" fill="none" stroke="#d6d6d0" strokeWidth={2.4} strokeLinecap="round" />
           ) : (
             <path d="M100 130 V176" stroke="#2f827c" strokeWidth={2} />
           )}
-          <Head v={variant} expr={expr} p={p} />
+          <Head v={variant} expr={expr} p={p} t={t} />
         </g>
       </g>
     </svg>
@@ -478,9 +608,11 @@ export const OcaCharacter: React.FC<{
   pose?: Pose;
   expr?: Expression;
   size?: number;
-}> = ({ pose = "stand", expr = "happy", size = 220 }) => (
+  frame?: number;
+  fps?: number;
+}> = ({ pose = "stand", expr = "happy", size = 220, frame = 0, fps = 30 }) => (
   <svg viewBox="0 0 200 340" width={size} height={(size * 340) / 200}>
-    <Kid variant="oca" pose={pose} expr={expr} />
+    <Kid variant="oca" pose={pose} expr={expr} frame={frame} fps={fps} />
   </svg>
 );
 
