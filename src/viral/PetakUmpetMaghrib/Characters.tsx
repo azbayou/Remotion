@@ -6,13 +6,13 @@ export interface CharacterProps {
 }
 
 /**
- * Karakter Yosa:
+ * Karakter OCA:
  * - Postur lebih kurus / ramping
  * - Rambut hitam pendek bertekstur
  * - Kacamata bulat khas
  * - Pakaian kombinasi Merah & Hitam (Red & Black)
  */
-export const YosaCharacter: React.FC<CharacterProps> = ({ mood, time }) => {
+export const OCACharacter: React.FC<CharacterProps> = ({ mood, time }) => {
   const bounceY =
     Math.sin(time * 9) * (mood === "running" || mood === "panic" ? 6 : 2);
   const shakeX = mood === "panic" ? Math.sin(time * 35) * 4 : 0;
@@ -180,7 +180,7 @@ export const YosaCharacter: React.FC<CharacterProps> = ({ mood, time }) => {
       {/* Leher Ramping */}
       <rect x="-4.5" y="-3" width="9" height="8" rx="2" fill="#fed7aa" />
 
-      {/* Kepala Yosa (Bentuk Wajah Lebih Ramping & Proporsional) */}
+      {/* Kepala OCA (Bentuk Wajah Lebih Ramping & Proporsional) */}
       <ellipse
         cx="0"
         cy="-22"
@@ -337,7 +337,7 @@ export const YosaCharacter: React.FC<CharacterProps> = ({ mood, time }) => {
       )}
 
       {/* ============================================================== */}
-      {/* 👓 KACAMATA BULAT (ROUND GLASSES) KHAS YOSA                    */}
+      {/* 👓 KACAMATA BULAT (ROUND GLASSES) KHAS OCA                    */}
       {/* ============================================================== */}
       <g>
         {/* Bingkai Lensa Kiri Bulat */}
@@ -403,7 +403,7 @@ export const YosaCharacter: React.FC<CharacterProps> = ({ mood, time }) => {
         />
       </g>
 
-      {/* Name tag YOSA di dada (Warna Hitam Teks Putih Minimalis) */}
+      {/* Name tag OCA di dada (Warna Hitam Teks Putih Minimalis) */}
       <rect
         x="-13"
         y="22"

@@ -13,7 +13,7 @@ import {
   LyricSegment,
   TOTAL_DURATION,
 } from "./timeline";
-import { BestFriendCharacter, YosaCharacter } from "./Characters";
+import { BestFriendCharacter, OCACharacter } from "./Characters";
 
 export interface PetakUmpetMaghribProps {
   audioFileName?: string;
@@ -294,7 +294,7 @@ export const PetakUmpetMaghrib: React.FC<PetakUmpetMaghribProps> = ({
             <circle cx="125" cy="215" r="10" fill="#fef08a" />
             <circle cx="125" cy="260" r="110" fill="url(#streetLampGlow)" />
 
-            {/* Rumah Yosa & Gerbang Hangat */}
+            {/* Rumah OCA & Gerbang Hangat */}
             <g transform="translate(215, 290)">
               <polygon points="-10,40 60,-15 130,40" fill="#9a3412" />
               <rect
@@ -326,7 +326,7 @@ export const PetakUmpetMaghrib: React.FC<PetakUmpetMaghribProps> = ({
                 stroke="#78350f"
                 strokeWidth="2"
               />
-              {/* Plang RUMAH YOSA */}
+              {/* Plang RUMAH OCA */}
               <rect
                 x="20"
                 y="22"
@@ -345,7 +345,7 @@ export const PetakUmpetMaghrib: React.FC<PetakUmpetMaghribProps> = ({
                 fontWeight="900"
                 fill="#78350f"
               >
-                🏠 RUMAH YOSA
+                🏠 RUMAH OCA
               </text>
             </g>
           </g>
@@ -374,7 +374,7 @@ export const PetakUmpetMaghrib: React.FC<PetakUmpetMaghribProps> = ({
           );
         })}
 
-        {/* 8. ADEGAN KARAKTER UTAMA (YOSA & TEMAN) */}
+        {/* 8. ADEGAN KARAKTER UTAMA (OCA & TEMAN) */}
         <g transform="translate(180, 400)">
           {/* SCENE: Lari Petak Umpet */}
           {(currentSegment.sceneType === "sunset_surau" ||
@@ -404,7 +404,7 @@ export const PetakUmpetMaghrib: React.FC<PetakUmpetMaghribProps> = ({
                   Math.sin(currentTime * 3) * 45 + 25
                 }, 0)`}
               >
-                <YosaCharacter mood="running" time={currentTime} />
+                <OCACharacter mood="running" time={currentTime} />
               </g>
             </g>
           )}
@@ -412,7 +412,7 @@ export const PetakUmpetMaghrib: React.FC<PetakUmpetMaghribProps> = ({
           {/* SCENE: PANIK HAMPIR HOMELESS (CHORUS 1 & 2) */}
           {currentSegment.sceneType === "panic_homeless" && (
             <g>
-              {/* Ilustrasi Kardus Calon Rumah Yosa di Pojok */}
+              {/* Ilustrasi Kardus Calon Rumah OCA di Pojok */}
               <g transform="translate(-100, 22) rotate(-6)">
                 <rect
                   x="-32"
@@ -446,11 +446,11 @@ export const PetakUmpetMaghrib: React.FC<PetakUmpetMaghribProps> = ({
                   fontSize="6.5"
                   fill="#ffffff"
                 >
-                  (Calon Kosan Yosa)
+                  (Calon Kosan OCA)
                 </text>
               </g>
 
-              <YosaCharacter mood="panic" time={currentTime} />
+              <OCACharacter mood="panic" time={currentTime} />
 
               {/* Stempel Komik Besar "HAMPIR HOMELESS!" */}
               {currentSegment.isHook && (
@@ -489,7 +489,7 @@ export const PetakUmpetMaghrib: React.FC<PetakUmpetMaghribProps> = ({
           {(currentSegment.sceneType === "lost_alley" ||
             currentSegment.sceneType === "crying_corner") && (
             <g>
-              <YosaCharacter
+              <OCACharacter
                 mood={
                   currentSegment.sceneType === "crying_corner"
                     ? "crying"
@@ -519,7 +519,7 @@ export const PetakUmpetMaghrib: React.FC<PetakUmpetMaghribProps> = ({
                     fontWeight="bold"
                     fill="#dc2626"
                   >
-                    😠 &quot;YOSAAA! BUKannya
+                    😠 &quot;OCAAA! BUKannya
                   </text>
                   <text
                     x="0"
@@ -541,7 +541,7 @@ export const PetakUmpetMaghrib: React.FC<PetakUmpetMaghribProps> = ({
             currentSegment.sceneType === "hero_friend") && (
             <g>
               <g transform="translate(-55, 0)">
-                <YosaCharacter
+                <OCACharacter
                   mood={
                     currentSegment.sceneType === "flashlight_search"
                       ? "crying"
@@ -568,7 +568,7 @@ export const PetakUmpetMaghrib: React.FC<PetakUmpetMaghribProps> = ({
             currentSegment.sceneType === "safe_home_outro") && (
             <g>
               <g transform="translate(-38, 0)">
-                <YosaCharacter mood="happy" time={currentTime} />
+                <OCACharacter mood="happy" time={currentTime} />
               </g>
               <g transform="translate(38, 0)">
                 <BestFriendCharacter
@@ -674,7 +674,7 @@ export const PetakUmpetMaghrib: React.FC<PetakUmpetMaghribProps> = ({
                 fontWeight: 600,
               }}
             >
-              Yosa (7 Thn) • Official 9:16 MV ({formatTime(currentTime)} /{" "}
+              OCA (7 Thn) • Official 9:16 MV ({formatTime(currentTime)} /{" "}
               {formatTime(TOTAL_DURATION)})
             </p>
           </div>

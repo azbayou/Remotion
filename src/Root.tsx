@@ -9,6 +9,7 @@ import { DEFAULT_QUIZ_DATA } from "./viral/QuizShort/mockQuiz";
 import { FakeChatShort } from "./viral/FakeChatShort/FakeChatShort";
 import { DEFAULT_CHAT_STORY } from "./viral/FakeChatShort/mockChat";
 import { PetakUmpetMaghrib } from "./viral/PetakUmpetMaghrib/PetakUmpetMaghrib";
+import { PetakUmpetMagribMV } from "./viral/PetakUmpetMagribMV";
 
 // Each <Composition> is an entry in the Remotion Studio sidebar!
 
@@ -74,12 +75,31 @@ export const RemotionRoot: React.FC = () => {
           id="PetakUmpetMaghrib"
           component={PetakUmpetMaghrib}
           durationInFrames={5307} // 176.88 detik @ 30 fps (2 menit 56 detik)
+          fps={24}
+          width={1080}
+          height={1920}
+          defaultProps={{
+            audioFileName: "petak-umpet-maghrib.mp3",
+            audioVolume: 1,
+            showSafeZone: false,
+          }}
+        />
+
+        {/* 🎬 5. Petak Umpet Magrib Movie Video (Scene by Scene Animated MV) */}
+        <Composition
+          id="PetakUmpetMagribMV"
+          component={PetakUmpetMagribMV}
+          durationInFrames={5307} // 176.88 detik @ 30 fps (2 menit 56.88 detik)
           fps={30}
           width={1080}
           height={1920}
           defaultProps={{
             audioFileName: "petak-umpet-maghrib.mp3",
             audioVolume: 1,
+            showCinematicBars: true,
+            showFilmGrain: true,
+            showHUD: true,
+            showSubtitles: true,
             showSafeZone: false,
           }}
         />
